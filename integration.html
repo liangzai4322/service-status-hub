@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>服务心跳台 · 多设备接入文档</title>
+<style>
+:root{--bg:#f4f7fb;--ink:#172337;--blue:#315efb;--line:#dce4ef;--code:#111c2d}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 "Microsoft YaHei UI",sans-serif}.wrap{max-width:940px;margin:auto;padding:48px 24px 80px}header{border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:30px}.eyebrow{color:var(--blue);font:700 12px Consolas;letter-spacing:.15em}h1{font:700 clamp(32px,6vw,58px)/1 Bahnschrift,"Microsoft YaHei UI";margin:12px 0}h2{margin-top:36px}.note{background:#e9efff;border-left:4px solid var(--blue);padding:14px 18px;border-radius:8px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:22px;margin:16px 0}pre{background:var(--code);color:#dbe6f7;padding:18px;border-radius:13px;overflow:auto;font:13px/1.6 Consolas,monospace}code{font-family:Consolas,monospace}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left}a{color:var(--blue)}.back{float:right}
+</style></head><body><main class="wrap">
+<header><a class="back" href="./">返回状态页</a><div class="eyebrow">SERVICE STATUS HUB / PROTOCOL 1.0</div><h1>多设备接入文档</h1><p>任何电脑或服务只需定时向统一 HTTPS 接口提交一份 JSON，即会出现在服务心跳台。</p></header>
+<div class="note"><strong>接入原则：</strong>每台设备使用唯一 <code>service_id</code>；令牌通过环境变量传入，不写进代码仓库、日志或公开文档。</div>
+<h2>1. 接口信息</h2><div class="card"><p><strong>上报地址</strong></p><pre>POST https://liangzai666.com/status-api/v1/status
+Authorization: Bearer &lt;STATUS_HUB_TOKEN&gt;
+Content-Type: application/json</pre><p>向状态中心管理员获取写入令牌，并保存为设备环境变量 <code>STATUS_HUB_TOKEN</code>。</p></div>
+<h2>2. 数据协议</h2><pre>{
+  "service_id": "xianyu-auto-reply.office-pc-01",
+  "name": "咸鱼自动回复 · 办公电脑 01",
+  "state": "healthy",
+  "message": "WebSocket 心跳正常",
+  "observed_at": "2026-09-09T08:00:00Z",
+  "ttl_seconds": 120,
+  "metrics": {"queue": 0},
+  "details": {"version": "1.0.0"},
+  "source": "device-reporter"
+}</pre>
+<table><thead><tr><th>字段</th><th>要求</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>service_id</code></td><td>必填</td><td>建议 <code>&lt;服务&gt;.&lt;设备&gt;</code>，仅小写英文、数字、<code>-_.</code></td></tr>
+<tr><td><code>state</code></td><td>必填</td><td><code>healthy</code> / <code>degraded</code> / <code>down</code> / <code>maintenance</code> / <code>unknown</code></td></tr>
+<tr><td><code>name</code></td><td>选填</td><td>页面展示名称</td></tr><tr><td><code>message</code></td><td>选填</td><td>当前状态摘要</td></tr>
+<tr><td><code>ttl_seconds</code></td><td>选填</td><td>默认 120；超时后页面自动标记为状态过期</td></tr>
+<tr><td><code>metrics/details</code></td><td>选填</td><td>任意 JSON 对象，用于指标与诊断详情</td></tr></tbody></table>
+<h2>3. Python 最小接入</h2><pre>import json, os, urllib.request
+
+payload = {
+    "service_id": "my-service.office-pc-01",
+    "name": "我的服务 · 办公电脑 01",
+    "state": "healthy",
+    "message": "运行正常",
+    "ttl_seconds": 120
+}
+req = urllib.request.Request(
+    "https://liangzai666.com/status-api/v1/status",
+    data=json.dumps(payload).encode("utf-8"),
+    method="POST",
+    headers={
+        "Authorization": "Bearer " + os.environ["STATUS_HUB_TOKEN"],
+        "Content-Type": "application/json"
+    }
+)
+print(urllib.request.urlopen(req, timeout=15).read().decode())</pre>
+<h2>4. PowerShell 最小接入</h2><pre>$headers = @{ Authorization = "Bearer $env:STATUS_HUB_TOKEN" }
+$body = @{
+  service_id = "my-service.office-pc-01"
+  name = "我的服务 · 办公电脑 01"
+  state = "healthy"
+  message = "运行正常"
+  ttl_seconds = 120
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post `
+  -Uri "https://liangzai666.com/status-api/v1/status" `
+  -Headers $headers -ContentType "application/json" -Body $body</pre>
+<h2>5. 建议上报逻辑</h2><div class="card"><ol><li>每 30–60 秒检测本机服务一次。</li><li>无论健康或故障都上报，状态变化时更新 <code>message</code>。</li><li><code>ttl_seconds</code> 设置为上报间隔的 3–4 倍。</li><li>设备重启后自动启动上报器。</li><li>服务名称相同但设备不同，必须使用不同的 <code>service_id</code>。</li></ol></div>
+<h2>6. 查询与联调</h2><pre>GET https://liangzai666.com/status-api/v1/services
+GET https://liangzai666.com/status-api/v1/events
+GET https://liangzai666.com/status-api/v1/schema
+GET https://liangzai666.com/status-api/healthz</pre>
+</main></body></html>
+
