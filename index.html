@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>服务心跳台</title>
+  <style>
+    :root{--paper:#f3f6fb;--panel:#fff;--ink:#162235;--muted:#69758a;--line:#dfe6f0;--blue:#315efb;--green:#0f9f84;--amber:#d98b19;--red:#d64a59;--gray:#8290a6;--shadow:0 18px 50px rgba(38,59,94,.09)}
+    *{box-sizing:border-box}html{background:var(--paper);color:var(--ink);font-family:"Microsoft YaHei UI","Microsoft YaHei",sans-serif}body{margin:0;min-height:100vh;background:radial-gradient(circle at 85% 4%,rgba(49,94,251,.10),transparent 27rem),var(--paper)}
+    button,a{font:inherit}button:focus-visible,a:focus-visible{outline:3px solid rgba(49,94,251,.28);outline-offset:3px}
+    .shell{max-width:1320px;margin:auto;padding:34px 30px 60px}.mast{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:24px}.eyebrow{font:700 12px/1.2 Consolas,monospace;letter-spacing:.18em;color:var(--blue);text-transform:uppercase}.title{font:700 clamp(34px,6vw,74px)/.95 Bahnschrift,"Microsoft YaHei UI",sans-serif;letter-spacing:-.045em;margin:12px 0 8px}.subtitle{color:var(--muted);margin:0;font-size:15px}.clock{text-align:right}.clock strong{font:600 28px/1 Consolas,monospace}.clock span{display:block;color:var(--muted);font-size:12px;margin-top:8px}
+    .overview{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:22px 0 30px}.stat{background:rgba(255,255,255,.72);border:1px solid var(--line);padding:14px 16px;border-radius:14px}.stat b{font:700 25px/1 Bahnschrift,sans-serif}.stat span{display:block;color:var(--muted);font-size:12px;margin-top:6px}.stat[data-s=healthy] b{color:var(--green)}.stat[data-s=degraded] b{color:var(--amber)}.stat[data-s=down] b{color:var(--red)}
+    .section-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 14px}.section-head h2{font:650 18px Bahnschrift,"Microsoft YaHei UI";margin:0}.live{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.live i{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(15,159,132,.12);animation:pulse 2s infinite}@keyframes pulse{50%{box-shadow:0 0 0 10px rgba(15,159,132,0)}}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:22px;min-height:230px}.card:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--state,var(--gray))}.card-top{display:flex;justify-content:space-between;gap:14px}.card h3{font:650 22px Bahnschrift,"Microsoft YaHei UI";margin:0}.service-id{font:11px Consolas,monospace;color:var(--muted);margin-top:5px}.badge{align-self:start;border:1px solid color-mix(in srgb,var(--state) 32%,white);background:color-mix(in srgb,var(--state) 9%,white);color:var(--state);padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}.message{font-size:15px;margin:28px 0 22px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.metric{border-top:1px solid var(--line);padding-top:10px;min-width:0}.metric b{display:block;font:600 13px Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.metric span{color:var(--muted);font-size:11px}.tape{height:34px;margin-top:18px;position:relative;background:linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/24px 100%}.tape svg{width:100%;height:34px;overflow:visible}.tape polyline{fill:none;stroke:var(--state);stroke-width:2;vector-effect:non-scaling-stroke}.empty{grid-column:1/-1;border:1px dashed var(--line);border-radius:20px;padding:50px;text-align:center;color:var(--muted)}
+    .docs{margin-top:34px;background:#172337;color:#eaf0fb;border-radius:22px;padding:26px;box-shadow:var(--shadow)}.docs-head{display:flex;justify-content:space-between;align-items:center}.docs h2{margin:0;font:650 21px Bahnschrift,sans-serif}.docs p{color:#aebbd0;font-size:13px}.endpoint{font:13px Consolas,monospace;background:#0f1929;border:1px solid #30405a;border-radius:12px;padding:14px;overflow:auto}.method{color:#79dfc7;font-weight:700}.docs-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.code{margin:0;white-space:pre-wrap;color:#c9d5e8}.copy{border:1px solid #40516d;background:transparent;color:#d9e4f4;padding:8px 12px;border-radius:9px;cursor:pointer}.copy:hover{background:#263650}.footer{color:var(--muted);font-size:11px;margin-top:16px;text-align:right}
+    @media(max-width:800px){.shell{padding:24px 16px 44px}.mast{grid-template-columns:1fr}.clock{text-align:left}.overview{grid-template-columns:repeat(3,1fr)}.grid,.docs-grid{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.title{font-size:46px}}
+    @media(prefers-reduced-motion:reduce){.live i{animation:none}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="mast"><div><div class="eyebrow">Cloud operations / multi-device status</div><h1 class="title">服务心跳台</h1><p class="subtitle">一个页面查看所有自动化服务的连接、任务与最后心跳。</p></div><div class="clock"><strong id="clock">--:--:--</strong><span id="updated">等待首次刷新</span></div></header>
+    <section class="overview" id="overview"></section>
+    <div class="section-head"><h2>当前服务</h2><div class="live"><i></i><span>每 5 秒自动刷新</span></div></div>
+    <section class="grid" id="services"><div class="empty">正在读取服务状态…</div></section>
+    <section class="docs">
+      <div class="docs-head"><div><h2>统一上报接口</h2><p>后续服务只需按同一份 JSON 协议推送状态。</p></div><button class="copy" id="copy">复制示例</button></div>
+      <div class="endpoint"><span class="method">POST</span> https://liangzai666.com/status-api/v1/status　 Authorization: Bearer &lt;STATUS_HUB_TOKEN&gt;</div>
+      <div class="docs-grid"><div class="endpoint"><pre class="code" id="example">{
+  "service_id": "my-service",
+  "name": "我的服务",
+  "state": "healthy",
+  "message": "运行正常",
+  "observed_at": "2026-09-09T08:00:00Z",
+  "ttl_seconds": 120,
+  "metrics": {"queue": 0},
+  "details": {"version": "1.0.0"}
+}</pre></div><div class="endpoint"><pre class="code">状态枚举
+healthy      正常
+degraded     部分异常
+down         停止或不可用
+maintenance  维护中
+unknown      超过 TTL 未上报
+
+读取全部状态
+GET https://liangzai666.com/status-api/v1/services
+
+读取状态变更
+GET https://liangzai666.com/status-api/v1/events</pre></div></div>
+      <div class="footer"><a href="integration.html" style="color:#79dfc7;margin-right:18px">??????????? ?</a>写入令牌保存在本机配置文件中；页面与读取接口不展示令牌。</div>
+    </section>
+  </main>
+  <script>
+    const API_BASE="https://liangzai666.com/status-api";
+    const labels={healthy:'正常',degraded:'需关注',down:'已停止',maintenance:'维护中',unknown:'状态过期'};
+    const colors={healthy:'#0f9f84',degraded:'#d98b19',down:'#d64a59',maintenance:'#315efb',unknown:'#8290a6'};
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const age=n=>n==null?'—':n<60?`${n} 秒前`:n<3600?`${Math.floor(n/60)} 分钟前`:`${Math.floor(n/3600)} 小时前`;
+    function tape(state){const y={healthy:'17,17 40,17 48,5 58,29 68,17 95,17 103,10 111,24 120,17 160,17',degraded:'0,17 30,17 40,9 50,25 60,17 92,17 102,5 112,29 122,17 160,17',down:'0,17 160,17',maintenance:'0,17 30,17 40,10 50,24 60,17 160,17',unknown:'0,17 20,17 30,12 40,22 50,17 70,17 80,12 90,22 100,17 120,17'}[state]||'0,17 160,17';return `<svg viewBox="0 0 160 34" preserveAspectRatio="none"><polyline points="${y}"/></svg>`}
+    function metricEntries(s){const m=s.metrics||{};return [['任务',m.task_state??'—'],['最近信号',age(s.age_seconds)],['TTL',`${s.ttl_seconds}s`]]}
+    function render(data){const services=data.services||[];document.getElementById('overview').innerHTML=['healthy','degraded','down','maintenance','unknown'].map(k=>`<div class="stat" data-s="${k}"><b>${services.filter(s=>s.state===k).length}</b><span>${labels[k]}</span></div>`).join('');document.getElementById('services').innerHTML=services.length?services.map(s=>`<article class="card" style="--state:${colors[s.state]}"><div class="card-top"><div><h3>${esc(s.name)}</h3><div class="service-id">${esc(s.service_id)}</div></div><span class="badge">${labels[s.state]}</span></div><div class="message">${esc(s.message||'暂无说明')}</div><div class="metrics">${metricEntries(s).map(([k,v])=>`<div class="metric"><b title="${esc(v)}">${esc(v)}</b><span>${k}</span></div>`).join('')}</div><div class="tape">${tape(s.state)}</div></article>`).join(''):'<div class="empty">还没有服务上报状态。按照下方接口接入第一个服务。</div>';document.getElementById('updated').textContent=`最后刷新 ${new Date(data.generated_at).toLocaleTimeString('zh-CN')}`}
+    async function refresh(){try{const r=await fetch(`${API_BASE}/v1/services`,{cache:'no-store'});render(await r.json())}catch(e){document.getElementById('updated').textContent='状态中心连接中断'}}
+    setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false}),1000);setInterval(refresh,5000);refresh();
+    document.getElementById('copy').onclick=async()=>{await navigator.clipboard.writeText(document.getElementById('example').textContent);const b=document.getElementById('copy');b.textContent='已复制';setTimeout(()=>b.textContent='复制示例',1200)};
+  </script>
+</body>
+</html>
