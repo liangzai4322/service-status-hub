@@ -61,5 +61,19 @@ Invoke-RestMethod -Method Post `
 GET https://liangzai666.com/status-api/v1/events
 GET https://liangzai666.com/status-api/v1/schema
 GET https://liangzai666.com/status-api/healthz</pre>
+<h2>7. 24 小时历史</h2><pre>GET https://liangzai666.com/status-api/v1/history?service_id=my-service.office-pc-01&amp;hours=24
+GET https://liangzai666.com/status-api/v1/history?hours=24</pre>
+<p>带 <code>service_id</code> 时返回单个服务；省略时在 <code>services</code> 数组中批量返回全部服务。<code>hours</code> 默认 24，范围 1–168。</p>
+<pre>{
+  "service_id": "my-service.office-pc-01",
+  "from": "2026-10-22T10:00:00Z",
+  "to": "2026-10-23T10:00:00Z",
+  "intervals": [
+    {"state": "healthy", "from": "2026-10-22T10:00:00Z", "to": "2026-10-23T10:00:00Z", "seconds": 86400}
+  ],
+  "uptime_ratio": 1.0
+}</pre>
+<p>时间均为 UTC。历史只保存状态变更点；停止上报后，由服务端按 <code>received_at + ttl_seconds</code> 补写 unknown。历史启用前及首次上报前的空白记为 unknown。Uptime = healthy 秒数 ÷ 整个查询窗口秒数，unknown、down、degraded 和 maintenance 均不计入正常时长。</p>
+<p>页面每 30 秒批量读取一次历史，将滚动 24 小时分为 96 格，每格 15 分钟，按 down &gt; unknown &gt; degraded &gt; maintenance &gt; healthy 着色。悬停可查看浏览器所在时区的时间范围和状态。</p>
 </main></body></html>
 
