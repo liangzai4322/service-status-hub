@@ -5,6 +5,7 @@
 - 在线状态页：https://liangzai4322.github.io/service-status-hub/
 - 在线接入文档：https://liangzai4322.github.io/service-status-hub/integration.html
 - HTTPS API：https://liangzai666.com/status-api
+- 转发给其他项目 Codex：[项目接入与操作交接](CODEX-HANDOFF.md)
 
 ## 接入约定
 
